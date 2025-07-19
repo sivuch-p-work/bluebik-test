@@ -21,7 +21,7 @@ func main() {
 		conn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			dbHost, dbPort, dbUser, dbPass, dbName)
 
-		fmt.Println(conn)
+		log.Printf("Connecting to DB: %s", conn)
 
 		db, err := sql.Open("postgres", conn)
 		if err != nil {

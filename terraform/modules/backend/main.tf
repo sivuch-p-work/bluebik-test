@@ -39,6 +39,16 @@ resource "aws_iam_role" "ecs_task_role" {
     })
 }
 
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "main" {
+    name              = "/ecs/${var.cluster_name}"
+    retention_in_days = 7
+
+    tags = {
+        Name = "${var.cluster_name}-logs"
+    }
+}
+
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
     name = var.cluster_name
@@ -66,7 +76,7 @@ resource "aws_ecs_task_definition" "main" {
     container_definitions = jsonencode([
         {
             name  = "backend"
-            image = "sivuch/go-test-db:latest"
+            image = "sivuch/go-test-db:v1.0.0"
             
             portMappings = [
                 {
@@ -98,14 +108,14 @@ resource "aws_ecs_task_definition" "main" {
                 }
             ]
 
-            # logConfiguration = {
-            #     logDriver = "awslogs"
-            #     options = {
-            #         awslogs-group         = "/ecs/${var.cluster_name}"
-            #         awslogs-region        = "ap-southeast-1"
-            #         awslogs-stream-prefix = "backend"
-            #     }
-            # }
+            logConfiguration = {
+                logDriver = "awslogs"
+                options = {
+                    awslogs-group         = "${aws_cloudwatch_log_group.main.name}"
+                    awslogs-region        = "ap-southeast-1"
+                    awslogs-stream-prefix = "backend"
+                }
+            }
         }
     ])
 
@@ -131,20 +141,10 @@ resource "aws_ecs_service" "main" {
     load_balancer {
         target_group_arn = var.alb_target_group_arn
         container_name   = "backend"
-        container_port   = 80
+        container_port   = 8080
     }
 
     tags = {
         Name = "${var.cluster_name}-service"
     }
 }
-
-# # CloudWatch Log Group
-# resource "aws_cloudwatch_log_group" "main" {
-#     name              = "/ecs/${var.cluster_name}"
-#     retention_in_days = 7
-
-#     tags = {
-#         Name = "${var.cluster_name}-logs"
-#     }
-# }

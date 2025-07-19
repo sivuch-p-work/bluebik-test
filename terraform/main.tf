@@ -83,25 +83,6 @@ module "kong" {
     depends_on = [module.vpc, module.alb, module.kong_db]
 }
 
-# Backend Cluster
-module "backend" {
-    source = "./modules/backend"
-    
-    cluster_name            = "backend-cluster"
-    vpc_id                  = module.vpc.vpc_id
-    private_subnet_ids      = [module.vpc.private_subnet_ids["ap-southeast-1b"]]
-    security_group_id       = module.vpc.private_security_group_id
-    alb_target_group_arn    = module.alb.target_group_arn
-
-    db_host     = module.aurora.endpoint
-    db_port     = module.aurora.port
-    db_name     = module.aurora.database_name
-    db_user     = module.aurora.master_username
-    db_password = var.aurora_master_password
-    
-    depends_on = [module.vpc, module.alb]
-}
-
 # Aurora PostgreSQL Database
 module "aurora" {
     source = "./modules/aurora"
@@ -114,6 +95,25 @@ module "aurora" {
     master_password             = var.aurora_master_password
     
     depends_on = [module.vpc]
+}
+
+# Backend Cluster
+module "backend" {
+    source = "./modules/backend"
+    
+    cluster_name            = "backend-cluster"
+    vpc_id                  = module.vpc.vpc_id
+    private_subnet_ids      = [module.vpc.private_subnet_ids["ap-southeast-1b"]]
+    security_group_id       = module.vpc.private_security_group_id
+    alb_target_group_arn    = module.alb.target_group_arn
+
+    db_host     = module.aurora.cluster_endpoint
+    db_port     = "5432"
+    db_name     = module.aurora.database_name
+    db_user     = module.aurora.master_username
+    db_password = module.aurora.master_password
+    
+    depends_on = [module.vpc, module.alb, module.aurora]
 }
 
 # Redis Cache

@@ -11,4 +11,14 @@ output "cluster_identifier" {
 output "database_name" {
   description = "Database name"
   value       = aws_rds_cluster.main.database_name
-} 
+}
+
+output "master_username" {
+  description = "Master username"
+  value       = aws_rds_cluster.main.master_username
+}
+
+output "master_password" {
+  description = "Master password"
+  value       = aws_rds_cluster.main.master_password
+}
