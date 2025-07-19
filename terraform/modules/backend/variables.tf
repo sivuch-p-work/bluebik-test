@@ -21,4 +21,34 @@ variable "security_group_id" {
 variable "alb_target_group_arn" {
   description = "ARN of the ALB target group"
   type        = string
-} 
+}
+
+variable "db_host" {
+  description = "Database host"
+  type        = string
+  default     = ""
+}
+
+variable "db_port" {
+  description = "Database port"
+  type        = string
+  default     = "5432"
+}
+
+variable "db_name" {
+  description = "Database name"
+  type        = string
+  default     = ""
+}
+
+variable "db_user" {
+  description = "Database user"
+  type        = string
+  default     = ""
+}
+
+variable "db_password" {
+  description = "Database password"
+  type        = string
+  default     = ""
+}

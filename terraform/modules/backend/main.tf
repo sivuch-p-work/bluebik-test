@@ -66,19 +66,35 @@ resource "aws_ecs_task_definition" "main" {
     container_definitions = jsonencode([
         {
             name  = "backend"
-            image = "nginx:alpine"
+            image = "sivuch/go-test-db:latest"
             
             portMappings = [
                 {
-                    containerPort = 80
+                    containerPort = 8080
                     protocol      = "tcp"
                 }
             ]
 
             environment = [
                 {
-                    name  = "NODE_ENV"
-                    value = "production"
+                    name  = "DB_HOST"
+                    value = var.db_host
+                },
+                {
+                    name  = "DB_PORT"
+                    value = var.db_port
+                },
+                {
+                    name  = "DB_NAME"
+                    value = var.db_name
+                },
+                {
+                    name  = "DB_USER"
+                    value = var.db_user
+                },
+                {
+                    name  = "DB_PASSWORD"
+                    value = var.db_password
                 }
             ]
 
