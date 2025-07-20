@@ -4,14 +4,17 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
+	"github.com/go-redis/redis/v7"
+	"github.com/gofiber/fiber/v2"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	http.HandleFunc("/db-check", func(w http.ResponseWriter, r *http.Request) {
+	app := fiber.New()
+
+	app.Get("/db-check", func(c *fiber.Ctx) error {
 		dbUser := os.Getenv("DB_USER")
 		dbPass := os.Getenv("DB_PASSWORD")
 		dbHost := os.Getenv("DB_HOST")
@@ -25,21 +28,45 @@ func main() {
 
 		db, err := sql.Open("postgres", conn)
 		if err != nil {
-			http.Error(w, "Failed to open connection: "+err.Error(), http.StatusInternalServerError)
-			return
+			return c.Status(fiber.StatusInternalServerError).SendString("Failed to open connection: " + err.Error())
 		}
 		defer db.Close()
 
 		err = db.Ping()
 		if err != nil {
-			http.Error(w, "Failed to ping DB: "+err.Error(), http.StatusInternalServerError)
-			return
+			return c.Status(fiber.StatusInternalServerError).SendString("Failed to ping DB: " + err.Error())
 		}
 
-		fmt.Fprintln(w, "Successfully connected to Aurora PostgreSQL 🎉")
+		return c.SendString("Successfully connected to Aurora PostgreSQL")
+	})
+
+	app.Get("/redis-check", func(c *fiber.Ctx) error {
+		redisHost := os.Getenv("REDIS_HOST")
+		redisPort := os.Getenv("REDIS_PORT")
+
+		conn := fmt.Sprintf("%s:%s", redisHost, redisPort)
+
+		log.Printf("Connecting to Redis: %s", conn)
+
+		redisClient := redis.NewClient(&redis.Options{
+			Addr:     conn,
+			Password: "",
+			DB:       0,
+		})
+
+		_, err := redisClient.Ping().Result()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString("Failed to ping Redis: " + err.Error())
+		}
+
+		return c.SendString("Successfully connected to Redis")
+	})
+
+	app.Get("/healthz", func(c *fiber.Ctx) error {
+		return c.SendString("OK")
 	})
 
 	port := "8080"
 	log.Printf("Starting server on port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(app.Listen(":" + port))
 }

@@ -67,22 +67,6 @@ module "kong_db" {
     depends_on = [module.vpc]
 }
 
-# Kong Cluster
-module "kong" {
-    source = "./modules/kong"
-    
-    cluster_name            = "kong-cluster"
-    vpc_id                  = module.vpc.vpc_id
-    private_subnet_ids      = [module.vpc.private_subnet_ids["ap-southeast-1b"]]
-    security_group_id       = module.vpc.private_security_group_id
-    alb_target_group_arn    = module.alb.target_group_arn
-    kong_db_host            = module.kong_db.endpoint
-    kong_db_user            = module.kong_db.database_name
-    kong_db_password        = var.kong_db_password
-    
-    depends_on = [module.vpc, module.alb, module.kong_db]
-}
-
 # Aurora PostgreSQL Database
 module "aurora" {
     source = "./modules/aurora"
@@ -95,6 +79,36 @@ module "aurora" {
     master_password             = var.aurora_master_password
     
     depends_on = [module.vpc]
+}
+
+# Redis Cache
+module "redis" {
+    source = "./modules/redis"
+    
+    cluster_name                = "redis"
+    vpc_id                      = module.vpc.vpc_id
+    private_subnet_ids          = [module.vpc.private_subnet_ids["ap-southeast-1c"]]
+    private_security_group_id   = module.vpc.private_security_group_id
+    
+    depends_on = [module.vpc]
+}
+
+# Kong Cluster
+module "kong" {
+    source = "./modules/kong"
+    
+    cluster_name            = "kong-cluster"
+    vpc_id                  = module.vpc.vpc_id
+    private_subnet_ids      = [module.vpc.private_subnet_ids["ap-southeast-1b"]]
+    security_group_id       = module.vpc.private_security_group_id
+    alb_target_group_arn    = module.alb.target_group_arn
+    kong_db_host            = module.kong_db.host
+    kong_db_port            = module.kong_db.port
+    kong_db_user            = module.kong_db.database_name
+    kong_db_password        = var.kong_db_password
+    kong_image_url          = "644789170005.dkr.ecr.ap-southeast-1.amazonaws.com/kong:latest"
+    
+    depends_on = [module.vpc, module.alb, module.kong_db]
 }
 
 # Backend Cluster
@@ -111,21 +125,12 @@ module "backend" {
     db_port     = "5432"
     db_name     = module.aurora.database_name
     db_user     = module.aurora.master_username
-    db_password = module.aurora.master_password
+    db_password = var.aurora_master_password
+
+    redis_host  = module.redis.cache_cluster_address
+    redis_port  = "6379"
     
     depends_on = [module.vpc, module.alb, module.aurora]
-}
-
-# Redis Cache
-module "redis" {
-    source = "./modules/redis"
-    
-    cluster_name                = "redis"
-    vpc_id                      = module.vpc.vpc_id
-    private_subnet_ids          = [module.vpc.private_subnet_ids["ap-southeast-1c"]]
-    private_security_group_id   = module.vpc.private_security_group_id
-    
-    depends_on = [module.vpc]
 }
 
 # Secrets Manager

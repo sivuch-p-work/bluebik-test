@@ -185,15 +185,6 @@ resource "aws_security_group" "trust_db" {
         security_groups = [aws_security_group.private.id]
     }
 
-    # Optional: Allow specific IP ranges for database access
-    # ingress {
-    #     description = "PostgreSQL from specific IPs"
-    #     from_port   = 5432
-    #     to_port     = 5432
-    #     protocol    = "tcp"
-    #     cidr_blocks = ["YOUR_IP_RANGE/32"]
-    # }
-
     egress {
         from_port   = 0
         to_port     = 0

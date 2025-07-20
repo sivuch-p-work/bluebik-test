@@ -1,0 +1,54 @@
+{
+  "version": 4,
+  "terraform_version": "1.10.4",
+  "serial": 618,
+  "lineage": "a7abd81e-9ea0-02ea-d860-ddab3c83feaf",
+  "outputs": {},
+  "resources": [
+    {
+      "module": "module.ecr",
+      "mode": "managed",
+      "type": "aws_ecr_repository",
+      "name": "kong",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:ecr:ap-southeast-1:644789170005:repository/kong",
+            "encryption_configuration": [
+              {
+                "encryption_type": "AES256",
+                "kms_key": ""
+              }
+            ],
+            "force_delete": null,
+            "id": "kong",
+            "image_scanning_configuration": [
+              {
+                "scan_on_push": true
+              }
+            ],
+            "image_tag_mutability": "MUTABLE",
+            "name": "kong",
+            "registry_id": "644789170005",
+            "repository_url": "644789170005.dkr.ecr.ap-southeast-1.amazonaws.com/kong",
+            "tags": {
+              "Name": "kong-repository"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "ManagedBy": "terraform",
+              "Name": "kong-repository",
+              "Project": "backend-vpc"
+            },
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiZGVsZXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

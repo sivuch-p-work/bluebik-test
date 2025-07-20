@@ -52,3 +52,15 @@ variable "db_password" {
   type        = string
   default     = ""
 }
+
+variable "redis_host" {
+  description = "Redis host"
+  type        = string
+  default     = ""
+}
+
+variable "redis_port" {
+  description = "Redis port"
+  type        = string
+  default     = "6379"
+}

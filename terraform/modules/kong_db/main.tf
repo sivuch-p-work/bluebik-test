@@ -11,11 +11,9 @@ resource "aws_db_subnet_group" "main" {
 # Security Group
 resource "aws_security_group" "main" {
     name        = "${var.instance_name}-sg"
-    description = "Security group for Kong database"
     vpc_id      = var.vpc_id
 
     ingress {
-        description     = "PostgreSQL from private subnets"
         from_port       = 5432
         to_port         = 5432
         protocol        = "tcp"

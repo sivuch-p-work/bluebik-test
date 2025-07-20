@@ -40,4 +40,16 @@ variable "kong_db_password" {
   type        = string
   default     = ""
   sensitive   = true
+}
+
+variable "kong_db_port" {
+  description = "Kong database port"
+  type        = string
+  default     = "5432"
+}
+
+variable "kong_image_url" {
+  description = "Kong Docker image URL"
+  type        = string
+  default     = "kong:latest"
 } 

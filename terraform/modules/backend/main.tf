@@ -76,7 +76,7 @@ resource "aws_ecs_task_definition" "main" {
     container_definitions = jsonencode([
         {
             name  = "backend"
-            image = "sivuch/go-test-db:v1.0.0"
+            image = "sivuch/go-test-db:v1.1.0"
             
             portMappings = [
                 {
@@ -105,13 +105,21 @@ resource "aws_ecs_task_definition" "main" {
                 {
                     name  = "DB_PASSWORD"
                     value = var.db_password
+                },
+                {
+                    name  = "REDIS_HOST"
+                    value = var.redis_host
+                },
+                {
+                    name  = "REDIS_PORT"
+                    value = var.redis_port
                 }
             ]
 
             logConfiguration = {
                 logDriver = "awslogs"
                 options = {
-                    awslogs-group         = "${aws_cloudwatch_log_group.main.name}"
+                    awslogs-group         = aws_cloudwatch_log_group.main.name
                     awslogs-region        = "ap-southeast-1"
                     awslogs-stream-prefix = "backend"
                 }

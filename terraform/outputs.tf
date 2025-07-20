@@ -26,4 +26,4 @@ output "redis_endpoint" {
 output "kong_secret_arn" {
   description = "ARN of the Kong secret"
   value       = module.secrets.secret_arn
-} 
+}

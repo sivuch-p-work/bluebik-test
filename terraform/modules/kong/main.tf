@@ -37,7 +37,17 @@ resource "aws_iam_role" "ecs_task_role" {
             }
         ]
     })
-} 
+}
+
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "main" {
+    name              = "/ecs/${var.cluster_name}"
+    retention_in_days = 7
+
+    tags = {
+        Name = "${var.cluster_name}-logs"
+    }
+}
 
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
@@ -65,8 +75,14 @@ resource "aws_ecs_task_definition" "main" {
 
     container_definitions = jsonencode([
         {
+            name  = "kong-migrations"
+            image = var.kong_image_url
+            command = ["kong", "migrations", "bootstrap"]
+        },
+        {
             name  = "kong"
-            image = "kong:latest"
+            image = var.kong_image_url
+            command = ["kong", "start"]
             
             portMappings = [
                 {
@@ -89,47 +105,59 @@ resource "aws_ecs_task_definition" "main" {
                     value = var.kong_db_host
                 },
                 {
+                    name  = "KONG_PG_PORT"
+                    value = "5432"
+                },
+                {
                     name  = "KONG_PG_USER"
                     value = var.kong_db_user
+                },
+                {
+                    name  = "KONG_PG_PASSWORD"
+                    value = var.kong_db_password
+                },
+                {
+                    name  = "KONG_PG_DATABASE"
+                    value = var.kong_db_user
+                },
+                {
+                    name  = "KONG_PG_SSL"
+                    value = "on"
+                },
+                {
+                    name  = "KONG_PROXY_LISTEN"
+                    value = "0.0.0.0:8000"
                 },
                 {
                     name  = "KONG_ADMIN_LISTEN"
                     value = "0.0.0.0:8001"
                 },
                 {
-                    name  = "KONG_ADMIN_GUI_URL"
-                    value = "http://localhost:8002"
+                    name  = "KONG_PROXY_ACCESS_LOG"
+                    value = "/dev/stdout"
+                },
+                {
+                    name  = "KONG_ADMIN_ACCESS_LOG"
+                    value = "/dev/stdout"
+                },
+                {
+                    name  = "KONG_PROXY_ERROR_LOG"
+                    value = "/dev/stderr"
+                },
+                {
+                    name  = "KONG_ADMIN_ERROR_LOG"
+                    value = "/dev/stderr"
                 }
-                # {
-                #     name  = "KONG_PG_PASSWORD"
-                #     value = var.kong_db_password
-                # },
-                # {
-                #     name  = "KONG_PROXY_ACCESS_LOG"
-                #     value = "/dev/stdout"
-                # },
-                # {
-                #     name  = "KONG_ADMIN_ACCESS_LOG"
-                #     value = "/dev/stdout"
-                # },
-                # {
-                #     name  = "KONG_PROXY_ERROR_LOG"
-                #     value = "/dev/stderr"
-                # },
-                # {
-                #     name  = "KONG_ADMIN_ERROR_LOG"
-                #     value = "/dev/stderr"
-                # }
             ]
 
-            # logConfiguration = {
-            #     logDriver = "awslogs"
-            #     options = {
-            #         awslogs-group         = aws_cloudwatch_log_group.main.name
-            #         awslogs-region        = "ap-southeast-1"
-            #         awslogs-stream-prefix = "kong"
-            #     }
-            # }
+            logConfiguration = {
+                logDriver = "awslogs"
+                options = {
+                    awslogs-group         = aws_cloudwatch_log_group.main.name
+                    awslogs-region        = "ap-southeast-1"
+                    awslogs-stream-prefix = "kong"
+                }
+            }
         }
     ])
 
@@ -143,7 +171,7 @@ resource "aws_ecs_service" "main" {
     name            = "${var.cluster_name}-service"
     cluster         = aws_ecs_cluster.main.id
     task_definition = aws_ecs_task_definition.main.arn
-    desired_count   = 2
+    desired_count   = 1
     launch_type     = "FARGATE"
 
     network_configuration {
@@ -158,19 +186,24 @@ resource "aws_ecs_service" "main" {
         container_port   = 8000
     }
 
-    depends_on = []
-
     tags = {
         Name = "${var.cluster_name}-service"
     }
 }
 
-# CloudWatch Log Group
-# resource "aws_cloudwatch_log_group" "main" {
-#     name              = "/ecs/${var.cluster_name}"
-#     retention_in_days = 7
+resource "null_resource" "kong_health_route" {
+    depends_on = [aws_ecs_service.main]
 
-#     tags = {
-#         Name = "${var.cluster_name}-logs"
-#     }
-# }
+    provisioner "local-exec" {
+        command = <<EOT
+            sleep 60
+
+            curl -s -X POST http://localhost:8001/services \
+                --data 'name=kong-health' \
+                --data 'url=http://localhost:8000/healthz' || true
+
+            curl -s -X POST http://localhost:8001/services/kong-health/routes \
+                --data 'paths[]=/healthz' || true
+            EOT
+    }
+}

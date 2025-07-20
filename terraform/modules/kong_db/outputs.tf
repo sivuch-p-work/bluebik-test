@@ -3,6 +3,11 @@ output "endpoint" {
   value       = aws_db_instance.main.endpoint
 }
 
+output "host" {
+  description = "Kong database host"
+  value       = aws_db_instance.main.address
+}
+
 output "port" {
   description = "Kong database port"
   value       = aws_db_instance.main.port
