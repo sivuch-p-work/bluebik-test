@@ -64,3 +64,9 @@ variable "redis_port" {
   type        = string
   default     = "6379"
 }
+
+variable "image_url" {
+  description = "Docker image URL for the backend container"
+  type        = string
+  default     = ""
+}

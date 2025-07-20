@@ -41,7 +41,7 @@ resource "aws_db_instance" "main" {
     storage_type         = "gp2"
     storage_encrypted    = true
     
-    db_name              = "kong"
+    db_name              = var.database_name
     username             = var.master_username
     password             = var.master_password
     

@@ -21,6 +21,30 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# IAM Policy for Secrets Manager access
+resource "aws_iam_policy" "secrets_access" {
+    name        = "${var.cluster_name}-secrets-access"
+    description = "Allow ECS tasks to access Secrets Manager"
+
+    policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Effect = "Allow"
+                Action = [
+                    "secretsmanager:GetSecretValue"
+                ]
+                Resource = var.secrets_arn
+            }
+        ]
+    })
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_access" {
+    role       = aws_iam_role.ecs_execution_role.name
+    policy_arn = aws_iam_policy.secrets_access.arn
+}
+
 # IAM Role for ECS Task
 resource "aws_iam_role" "ecs_task_role" {
     name = "${var.cluster_name}-task-role"
@@ -75,18 +99,17 @@ resource "aws_ecs_task_definition" "main" {
 
     container_definitions = jsonencode([
         {
-            name  = "kong-migrations"
-            image = var.kong_image_url
-            command = ["kong", "migrations", "bootstrap"]
-        },
-        {
             name  = "kong"
-            image = var.kong_image_url
-            command = ["kong", "start"]
+            image = var.image_url
+            command = ["/bin/sh", "-c", "kong migrations bootstrap && kong start"]
             
             portMappings = [
                 {
                     containerPort = 8000
+                    protocol      = "tcp"
+                },
+                {
+                    containerPort = 8001
                     protocol      = "tcp"
                 },
                 {
@@ -109,16 +132,8 @@ resource "aws_ecs_task_definition" "main" {
                     value = "5432"
                 },
                 {
-                    name  = "KONG_PG_USER"
-                    value = var.kong_db_user
-                },
-                {
-                    name  = "KONG_PG_PASSWORD"
-                    value = var.kong_db_password
-                },
-                {
                     name  = "KONG_PG_DATABASE"
-                    value = var.kong_db_user
+                    value = var.kong_db_name
                 },
                 {
                     name  = "KONG_PG_SSL"
@@ -150,6 +165,17 @@ resource "aws_ecs_task_definition" "main" {
                 }
             ]
 
+            secrets = [
+                {
+                    name      = "KONG_PG_USER"
+                    valueFrom = "${var.secrets_arn}:KONG_USER::"
+                },
+                {
+                    name      = "KONG_PG_PASSWORD"
+                    valueFrom = "${var.secrets_arn}:KONG_PASSWORD::"
+                }
+            ]
+
             logConfiguration = {
                 logDriver = "awslogs"
                 options = {
@@ -158,6 +184,17 @@ resource "aws_ecs_task_definition" "main" {
                     awslogs-stream-prefix = "kong"
                 }
             }
+        },
+        {
+            name = "healthcheck",
+            image = "curlimages/curl:latest",
+            entryPoint = ["sh", "-c"],
+            command = [
+                "while true; do curl -f http://localhost:8001/status || echo fail; sleep 10; done"
+            ],
+            dependsOn = [
+                { "containerName": "kong", "condition": "START" }
+            ]
         }
     ])
 
@@ -168,11 +205,12 @@ resource "aws_ecs_task_definition" "main" {
 
 # ECS Service
 resource "aws_ecs_service" "main" {
-    name            = "${var.cluster_name}-service"
-    cluster         = aws_ecs_cluster.main.id
-    task_definition = aws_ecs_task_definition.main.arn
-    desired_count   = 1
-    launch_type     = "FARGATE"
+    name                    = "${var.cluster_name}-service"
+    cluster                 = aws_ecs_cluster.main.id
+    task_definition         = aws_ecs_task_definition.main.arn
+    desired_count           = 2
+    launch_type             = "FARGATE"
+    enable_execute_command  = true
 
     network_configuration {
         subnets          = var.private_subnet_ids
@@ -191,19 +229,20 @@ resource "aws_ecs_service" "main" {
     }
 }
 
-resource "null_resource" "kong_health_route" {
-    depends_on = [aws_ecs_service.main]
+# resource "null_resource" "kong_health_route" {
+#     depends_on = [aws_ecs_service.main]
 
-    provisioner "local-exec" {
-        command = <<EOT
-            sleep 60
+#     provisioner "local-exec" {
+#         command = <<EOT
+#             sleep 60
 
-            curl -s -X POST http://localhost:8001/services \
-                --data 'name=kong-health' \
-                --data 'url=http://localhost:8000/healthz' || true
+#             curl -s -X POST http://localhost:8001/services \
+#                 --data 'name=kong-health' \
+#                 --data 'url=http://localhost:8001/status' || true
 
-            curl -s -X POST http://localhost:8001/services/kong-health/routes \
-                --data 'paths[]=/healthz' || true
-            EOT
-    }
-}
+#             curl -s -X POST http://localhost:8001/services/kong-health/routes \
+#                 --data 'name=kong-health-route' \
+#                 --data 'paths[]=/healthz' || true
+#             EOT
+#     }
+# }

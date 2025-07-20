@@ -29,6 +29,12 @@ variable "kong_db_host" {
   default     = ""
 }
 
+variable "kong_db_name" {
+  description = "Kong database name"
+  type        = string
+  default     = "kong"
+}
+
 variable "kong_db_user" {
   description = "Kong database user"
   type        = string
@@ -48,8 +54,13 @@ variable "kong_db_port" {
   default     = "5432"
 }
 
-variable "kong_image_url" {
+variable "image_url" {
   description = "Kong Docker image URL"
   type        = string
   default     = "kong:latest"
+}
+
+variable "secrets_arn" {
+  description = "ARN of the Secrets Manager secret containing Kong credentials"
+  type        = string
 } 

@@ -76,7 +76,7 @@ resource "aws_ecs_task_definition" "main" {
     container_definitions = jsonencode([
         {
             name  = "backend"
-            image = "sivuch/go-test-db:v1.1.0"
+            image = var.image_url
             
             portMappings = [
                 {

@@ -14,6 +14,10 @@ import (
 func main() {
 	app := fiber.New()
 
+	app.Get("/test", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
+
 	app.Get("/db-check", func(c *fiber.Ctx) error {
 		dbUser := os.Getenv("DB_USER")
 		dbPass := os.Getenv("DB_PASSWORD")

@@ -16,4 +16,9 @@ output "port" {
 output "database_name" {
   description = "Kong database name"
   value       = aws_db_instance.main.db_name
+}
+
+output "username" {
+  description = "Kong database username"
+  value       = aws_db_instance.main.username
 } 

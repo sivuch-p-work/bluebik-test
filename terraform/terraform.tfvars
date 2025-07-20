@@ -6,3 +6,5 @@ environment = "production"
 aurora_master_password = "mypassword"
 kong_db_password      = "mypassword"
 kong_secret_password  = "mypassword"
+
+is_override_kong_custom_image_used = true

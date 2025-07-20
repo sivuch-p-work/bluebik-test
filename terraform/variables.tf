@@ -27,3 +27,9 @@ variable "kong_secret_password" {
     type        = string
     sensitive   = true
 }
+
+variable "is_override_kong_custom_image_used" {
+    description = "Whether to use the official Kong image"
+    type        = bool
+    default     = false
+}

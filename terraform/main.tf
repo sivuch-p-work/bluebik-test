@@ -62,6 +62,8 @@ module "kong_db" {
     trust_subnet_ids            = module.vpc.trust_subnet_ids
     private_security_group_id   = module.vpc.private_security_group_id
     trust_db_security_group_id  = module.vpc.trust_db_security_group_id
+    database_name               = "kong"
+    master_username             = "kong"
     master_password             = var.kong_db_password
     
     depends_on = [module.vpc]
@@ -93,6 +95,18 @@ module "redis" {
     depends_on = [module.vpc]
 }
 
+# Secrets Manager
+module "secrets" {
+    source = "./modules/secrets"
+    
+    secret_name         = "kong-secrets"
+    kong_user           = module.kong_db.username
+    kong_password       = var.kong_secret_password
+    kong_postgres_url   = "postgresql://${module.kong_db.username}:${var.kong_secret_password}@${module.kong_db.endpoint}:${module.kong_db.port}/${module.kong_db.database_name}"
+    
+    depends_on = [module.kong_db]
+}
+
 # Kong Cluster
 module "kong" {
     source = "./modules/kong"
@@ -104,11 +118,14 @@ module "kong" {
     alb_target_group_arn    = module.alb.target_group_arn
     kong_db_host            = module.kong_db.host
     kong_db_port            = module.kong_db.port
-    kong_db_user            = module.kong_db.database_name
+    kong_db_name            = module.kong_db.database_name
+    kong_db_user            = module.kong_db.username
     kong_db_password        = var.kong_db_password
-    kong_image_url          = "644789170005.dkr.ecr.ap-southeast-1.amazonaws.com/kong:latest"
+
+    image_url               = var.is_override_kong_custom_image_used ? "644789170005.dkr.ecr.ap-southeast-1.amazonaws.com/kong:3.9.1" : "kong:3.9.1"
+    secrets_arn             = module.secrets.secret_arn
     
-    depends_on = [module.vpc, module.alb, module.kong_db]
+    depends_on = [module.vpc, module.alb, module.kong_db, module.secrets]
 }
 
 # Backend Cluster
@@ -127,19 +144,10 @@ module "backend" {
     db_user     = module.aurora.master_username
     db_password = var.aurora_master_password
 
+    image_url   = "sivuch/go-test-db:v1.2.0"
+
     redis_host  = module.redis.cache_cluster_address
     redis_port  = "6379"
     
     depends_on = [module.vpc, module.alb, module.aurora]
-}
-
-# Secrets Manager
-module "secrets" {
-    source = "./modules/secrets"
-    
-    secret_name         = "kong-secrets"
-    kong_password       = var.kong_secret_password
-    kong_postgres_url   = "postgresql://${module.kong_db.database_name}:${var.kong_secret_password}@${module.kong_db.endpoint}:${module.kong_db.port}/${module.kong_db.database_name}"
-    
-    depends_on = [module.kong_db]
 }

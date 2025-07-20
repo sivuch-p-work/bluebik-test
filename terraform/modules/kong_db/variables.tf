@@ -25,6 +25,12 @@ variable "trust_db_security_group_id" {
     default     = ""
 }
 
+variable "database_name" {
+    description = "Database name for RDS instance"
+    type        = string
+    default     = "kong"
+}
+
 variable "master_username" {
     description = "Master username for RDS instance"
     type        = string
