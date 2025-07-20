@@ -1,34 +1,22 @@
-# DB Subnet Group
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.cluster_name}-subnet-group"
-  subnet_ids = var.trust_subnet_ids
+    name       = "${var.cluster_name}-subnet-group"
+    subnet_ids = var.trust_subnet_ids
 
-  tags = {
-    Name = "${var.cluster_name}-subnet-group"
-  }
+    tags = {
+        Name = "${var.cluster_name}-subnet-group"
+    }
 }
 
-# Security Group
 resource "aws_security_group" "main" {
     name        = "${var.cluster_name}-sg"
-    description = "Security group for Aurora cluster"
     vpc_id      = var.vpc_id
 
     ingress {
-        description     = "PostgreSQL from private subnets"
         from_port       = 5432
         to_port         = 5432
         protocol        = "tcp"
         security_groups = [var.private_security_group_id]
     }
-
-    #   ingress {
-    #     description     = "PostgreSQL from trust subnets"
-    #     from_port       = 5432
-    #     to_port         = 5432
-    #     protocol        = "tcp"
-    #     security_groups = [var.trust_db_security_group_id]
-    #   }
 
     egress {
         from_port   = 0
@@ -42,7 +30,6 @@ resource "aws_security_group" "main" {
     }
 }
 
-# Aurora Cluster
 resource "aws_rds_cluster" "main" {
     cluster_identifier     = var.cluster_name
     engine                = "aurora-postgresql"
@@ -59,7 +46,6 @@ resource "aws_rds_cluster" "main" {
     }
 }
 
-# Aurora Instance
 resource "aws_rds_cluster_instance" "main" {
     count               = 2
     identifier          = "${var.cluster_name}-instance-${count.index + 1}"

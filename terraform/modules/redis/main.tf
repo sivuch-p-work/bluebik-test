@@ -1,4 +1,3 @@
-# Redis Subnet Group
 resource "aws_elasticache_subnet_group" "main" {
     name       = "${var.cluster_name}-subnet-group"
     subnet_ids = var.private_subnet_ids
@@ -8,17 +7,15 @@ resource "aws_elasticache_subnet_group" "main" {
     }
 }
 
-# Redis Parameter Group
 resource "aws_elasticache_parameter_group" "main" {
     name   = "${var.cluster_name}-params"
-    family = "redis7"
+    family = var.family
 
     tags = {
         Name = "${var.cluster_name}-params"
     }
 }
 
-# Redis Cluster
 resource "aws_elasticache_cluster" "main" {
     cluster_id           = var.cluster_name
     engine               = "redis"
@@ -34,7 +31,6 @@ resource "aws_elasticache_cluster" "main" {
     }
 }
 
-# Security Group
 resource "aws_security_group" "main" {
     name        = "${var.cluster_name}-sg"
     vpc_id      = var.vpc_id

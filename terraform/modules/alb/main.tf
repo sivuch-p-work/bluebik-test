@@ -1,4 +1,3 @@
-# Application Load Balancer
 resource "aws_lb" "main" {
     name               = var.name
     internal           = false
@@ -13,7 +12,6 @@ resource "aws_lb" "main" {
     }
 }
 
-# Target Group for Backend (port 8080)
 resource "aws_lb_target_group" "backend" {
     name        = "${var.name}-backend-tg"
     port        = 8080
@@ -38,7 +36,6 @@ resource "aws_lb_target_group" "backend" {
     }
 }
 
-# Target Group for Kong (port 8000 - Proxy)
 resource "aws_lb_target_group" "kong" {
     name        = "${var.name}-kong-tg"
     port        = 8000
@@ -63,7 +60,6 @@ resource "aws_lb_target_group" "kong" {
     }
 }
 
-# ALB Listener
 resource "aws_lb_listener" "main" {
     load_balancer_arn = aws_lb.main.arn
     port              = "80"
@@ -79,7 +75,6 @@ resource "aws_lb_listener" "main" {
     }
 }
 
-# Listener Rule for Backend API routes
 resource "aws_lb_listener_rule" "backend" {
     listener_arn = aws_lb_listener.main.arn
     priority     = 100
@@ -96,7 +91,6 @@ resource "aws_lb_listener_rule" "backend" {
     }
 }
 
-# Listener Rule for Kong (default traffic)
 resource "aws_lb_listener_rule" "kong" {
     listener_arn = aws_lb_listener.main.arn
     priority     = 200

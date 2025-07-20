@@ -1,4 +1,4 @@
-# IAM Role for ECS Execution
+
 resource "aws_iam_role" "ecs_execution_role" {
     name = "${var.cluster_name}-execution-role"
 
@@ -21,7 +21,6 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# IAM Role for ECS Task
 resource "aws_iam_role" "ecs_task_role" {
     name = "${var.cluster_name}-task-role"
 
@@ -39,7 +38,6 @@ resource "aws_iam_role" "ecs_task_role" {
     })
 }
 
-# CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "main" {
     name              = "/ecs/${var.cluster_name}"
     retention_in_days = 7
@@ -49,7 +47,6 @@ resource "aws_cloudwatch_log_group" "main" {
     }
 }
 
-# ECS Cluster
 resource "aws_ecs_cluster" "main" {
     name = var.cluster_name
 
@@ -63,7 +60,6 @@ resource "aws_ecs_cluster" "main" {
     }
 }
 
-# Task Definition
 resource "aws_ecs_task_definition" "main" {
     family                   = "${var.cluster_name}-task"
     network_mode             = "awsvpc"
@@ -132,7 +128,6 @@ resource "aws_ecs_task_definition" "main" {
     }
 }
 
-# ECS Service
 resource "aws_ecs_service" "main" {
     name            = "${var.cluster_name}-service"
     cluster         = aws_ecs_cluster.main.id

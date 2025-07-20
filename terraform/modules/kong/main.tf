@@ -1,4 +1,3 @@
-# IAM Role for ECS Execution
 resource "aws_iam_role" "ecs_execution_role" {
     name = "${var.cluster_name}-execution-role"
 
@@ -21,10 +20,8 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# IAM Policy for Secrets Manager access
 resource "aws_iam_policy" "secrets_access" {
     name        = "${var.cluster_name}-secrets-access"
-    description = "Allow ECS tasks to access Secrets Manager"
 
     policy = jsonencode({
         Version = "2012-10-17"
@@ -45,7 +42,6 @@ resource "aws_iam_role_policy_attachment" "secrets_access" {
     policy_arn = aws_iam_policy.secrets_access.arn
 }
 
-# IAM Role for ECS Task
 resource "aws_iam_role" "ecs_task_role" {
     name = "${var.cluster_name}-task-role"
 
@@ -63,7 +59,6 @@ resource "aws_iam_role" "ecs_task_role" {
     })
 }
 
-# CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "main" {
     name              = "/ecs/${var.cluster_name}"
     retention_in_days = 7
@@ -73,7 +68,6 @@ resource "aws_cloudwatch_log_group" "main" {
     }
 }
 
-# ECS Cluster
 resource "aws_ecs_cluster" "main" {
     name = var.cluster_name
 
@@ -87,7 +81,6 @@ resource "aws_ecs_cluster" "main" {
     }
 }
 
-# Task Definition
 resource "aws_ecs_task_definition" "main" {
     family                   = "${var.cluster_name}-task"
     network_mode             = "awsvpc"
@@ -203,7 +196,6 @@ resource "aws_ecs_task_definition" "main" {
     }
 }
 
-# ECS Service
 resource "aws_ecs_service" "main" {
     name                    = "${var.cluster_name}-service"
     cluster                 = aws_ecs_cluster.main.id
@@ -228,21 +220,3 @@ resource "aws_ecs_service" "main" {
         Name = "${var.cluster_name}-service"
     }
 }
-
-# resource "null_resource" "kong_health_route" {
-#     depends_on = [aws_ecs_service.main]
-
-#     provisioner "local-exec" {
-#         command = <<EOT
-#             sleep 60
-
-#             curl -s -X POST http://localhost:8001/services \
-#                 --data 'name=kong-health' \
-#                 --data 'url=http://localhost:8001/status' || true
-
-#             curl -s -X POST http://localhost:8001/services/kong-health/routes \
-#                 --data 'name=kong-health-route' \
-#                 --data 'paths[]=/healthz' || true
-#             EOT
-#     }
-# }

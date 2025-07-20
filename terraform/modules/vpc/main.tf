@@ -1,4 +1,4 @@
-# VPC
+
 resource "aws_vpc" "main" {
     cidr_block           = var.vpc_cidr
     enable_dns_hostnames = true
@@ -9,7 +9,6 @@ resource "aws_vpc" "main" {
     }
 }
 
-# Internet Gateway
 resource "aws_internet_gateway" "main" {
     vpc_id = aws_vpc.main.id
 
@@ -18,7 +17,6 @@ resource "aws_internet_gateway" "main" {
     }
 }
 
-# Trust Subnets (Public)
 resource "aws_subnet" "trust" {
     for_each = var.trust_subnet_cidrs
 
@@ -32,7 +30,6 @@ resource "aws_subnet" "trust" {
     }
 }
 
-# Private Subnets
 resource "aws_subnet" "private" {
     for_each = var.private_subnet_cidrs
 
@@ -45,7 +42,6 @@ resource "aws_subnet" "private" {
     }
 }
 
-# Elastic IP for NAT Gateway
 resource "aws_eip" "nat" {
     domain = "vpc"
     depends_on = [aws_internet_gateway.main]
@@ -55,7 +51,6 @@ resource "aws_eip" "nat" {
     }
 }
 
-# NAT Gateway
 resource "aws_nat_gateway" "main" {
     allocation_id = aws_eip.nat.id
     subnet_id     = aws_subnet.trust["ap-southeast-1b"].id
@@ -67,7 +62,6 @@ resource "aws_nat_gateway" "main" {
     depends_on = [aws_internet_gateway.main]
 }
 
-# Route Table for Trust Subnets
 resource "aws_route_table" "trust" {
     vpc_id = aws_vpc.main.id
 
@@ -81,7 +75,6 @@ resource "aws_route_table" "trust" {
     }
 }
 
-# Route Table for Private Subnets
 resource "aws_route_table" "private" {
     vpc_id = aws_vpc.main.id
 
@@ -95,7 +88,6 @@ resource "aws_route_table" "private" {
     }
 }
 
-# Route Table Associations for Trust Subnets
 resource "aws_route_table_association" "trust" {
     for_each = aws_subnet.trust
 
@@ -103,7 +95,6 @@ resource "aws_route_table_association" "trust" {
     route_table_id = aws_route_table.trust.id
 }
 
-# Route Table Associations for Private Subnets
 resource "aws_route_table_association" "private" {
     for_each = aws_subnet.private
 
@@ -111,10 +102,8 @@ resource "aws_route_table_association" "private" {
     route_table_id = aws_route_table.private.id
 }
 
-# Security Groups for ALB
 resource "aws_security_group" "alb" {
     name        = "${var.vpc_name}-alb-sg"
-    description = "Security group for ALB"
     vpc_id      = aws_vpc.main.id
 
     ingress {
@@ -145,10 +134,8 @@ resource "aws_security_group" "alb" {
     }
 }
 
-# Security Groups for Private
 resource "aws_security_group" "private" {
     name        = "${var.vpc_name}-private-sg"
-    description = "Security group for private resources"
     vpc_id      = aws_vpc.main.id
 
     ingress {
@@ -171,14 +158,11 @@ resource "aws_security_group" "private" {
     }
 }
 
-# Security Groups for Database in Trust Subnet
 resource "aws_security_group" "trust_db" {
     name        = "${var.vpc_name}-trust-db-sg"
-    description = "Security group for database in trust subnet"
     vpc_id      = aws_vpc.main.id
 
     ingress {
-        description     = "PostgreSQL from private subnets"
         from_port       = 5432
         to_port         = 5432
         protocol        = "tcp"

@@ -32,7 +32,7 @@ func main() {
 
 		db, err := sql.Open("postgres", conn)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).SendString("Failed to open connection: " + err.Error())
+			return c.Status(fiber.StatusInternalServerError).SendString("Failed connection: " + err.Error())
 		}
 		defer db.Close()
 

@@ -1,4 +1,3 @@
-# Kong Secrets
 resource "aws_secretsmanager_secret" "kong" {
     name = "${var.secret_name}-storage"
 
@@ -7,12 +6,10 @@ resource "aws_secretsmanager_secret" "kong" {
     }
 }
 
-# Random suffix for unique secret names
 resource "random_id" "secret_suffix" {
     byte_length = 8
 }
 
-# Kong Secret Values
 resource "aws_secretsmanager_secret_version" "kong" {
     secret_id = aws_secretsmanager_secret.kong.id
     secret_string = jsonencode({

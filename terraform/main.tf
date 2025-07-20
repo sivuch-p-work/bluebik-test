@@ -91,6 +91,7 @@ module "redis" {
     vpc_id                      = module.vpc.vpc_id
     private_subnet_ids          = [module.vpc.private_subnet_ids["ap-southeast-1c"]]
     private_security_group_id   = module.vpc.private_security_group_id
+    family                      = "redis7"
     
     depends_on = [module.vpc]
 }

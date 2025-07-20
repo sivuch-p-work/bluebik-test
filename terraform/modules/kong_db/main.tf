@@ -1,4 +1,3 @@
-# DB Subnet Group
 resource "aws_db_subnet_group" "main" {
     name       = "${var.instance_name}-subnet-group"
     subnet_ids = var.trust_subnet_ids
@@ -8,7 +7,6 @@ resource "aws_db_subnet_group" "main" {
     }
 }
 
-# Security Group
 resource "aws_security_group" "main" {
     name        = "${var.instance_name}-sg"
     vpc_id      = var.vpc_id
@@ -32,7 +30,6 @@ resource "aws_security_group" "main" {
     }
 }
 
-# RDS Instance
 resource "aws_db_instance" "main" {
     identifier           = var.instance_name
     engine               = "postgres"
