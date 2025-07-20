@@ -33,3 +33,20 @@ variable "is_override_kong_custom_image_used" {
     type        = bool
     default     = false
 }
+
+variable "secret_manager_kong_arn" {
+    description = "ARN of the secret manager for Kong"
+    type        = string
+    default     = ""
+}
+
+variable "kong_custom_image_url" {
+    description = "URL of the custom Kong image"
+    type        = string
+    default     = ""
+}
+
+variable "backend_image_url" {
+    description = "URL of the custom backend image"
+    type        = string
+}

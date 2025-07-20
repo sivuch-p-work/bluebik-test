@@ -190,7 +190,7 @@ resource "aws_ecs_task_definition" "main" {
             image = "curlimages/curl:latest",
             entryPoint = ["sh", "-c"],
             command = [
-                "while true; do curl -f http://localhost:8001/status || echo fail; sleep 10; done"
+                "while true; do curl -f http://localhost:8001/status || echo fail; sleep 300; done"
             ],
             dependsOn = [
                 { "containerName": "kong", "condition": "START" }

@@ -38,7 +38,7 @@ resource "aws_lb_target_group" "backend" {
     }
 }
 
-# Target Group for Kong (port 8000)
+# Target Group for Kong (port 8000 - Proxy)
 resource "aws_lb_target_group" "kong" {
     name        = "${var.name}-kong-tg"
     port        = 8000

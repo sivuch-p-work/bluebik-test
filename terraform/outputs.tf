@@ -23,7 +23,7 @@ output "redis_endpoint" {
   value       = module.redis.cache_cluster_address
 }
 
-output "kong_secret_arn" {
-  description = "ARN of the Kong secret"
-  value       = module.secrets.secret_arn
-}
+# output "kong_secret_arn" {
+#   description = "ARN of the Kong secret"
+#   value       = module.secrets.secret_arn
+# }
