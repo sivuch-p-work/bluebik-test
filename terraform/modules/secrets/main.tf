@@ -1,9 +1,9 @@
 # Kong Secrets
 resource "aws_secretsmanager_secret" "kong" {
-    name = "${var.secret_name}-${random_id.secret_suffix.hex}-${formatdate("YYYYMMDD-HHmmss", timestamp())}"
+    name = "${var.secret_name}-storage"
 
     tags = {
-        Name = "${var.secret_name}-${random_id.secret_suffix.hex}-${formatdate("YYYYMMDD-HHmmss", timestamp())}"
+        Name = "${var.secret_name}-storage"
     }
 }
 

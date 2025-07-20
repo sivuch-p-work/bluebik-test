@@ -115,7 +115,7 @@ module "kong" {
     vpc_id                  = module.vpc.vpc_id
     private_subnet_ids      = [module.vpc.private_subnet_ids["ap-southeast-1b"]]
     security_group_id       = module.vpc.private_security_group_id
-    alb_target_group_arn    = module.alb.target_group_arn
+    alb_target_group_arn    = module.alb.kong_target_group_arn
     kong_db_host            = module.kong_db.host
     kong_db_port            = module.kong_db.port
     kong_db_name            = module.kong_db.database_name
@@ -136,7 +136,7 @@ module "backend" {
     vpc_id                  = module.vpc.vpc_id
     private_subnet_ids      = [module.vpc.private_subnet_ids["ap-southeast-1b"]]
     security_group_id       = module.vpc.private_security_group_id
-    alb_target_group_arn    = module.alb.target_group_arn
+    alb_target_group_arn    = module.alb.backend_target_group_arn
 
     db_host     = module.aurora.cluster_endpoint
     db_port     = "5432"

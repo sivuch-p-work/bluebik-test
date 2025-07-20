@@ -8,7 +8,12 @@ output "alb_dns_name" {
   value       = aws_lb.main.dns_name
 }
 
-output "target_group_arn" {
-  description = "ARN of the target group"
-  value       = aws_lb_target_group.main.arn
+output "backend_target_group_arn" {
+  description = "ARN of the backend target group"
+  value       = aws_lb_target_group.backend.arn
+}
+
+output "kong_target_group_arn" {
+  description = "ARN of the kong target group"
+  value       = aws_lb_target_group.kong.arn
 } 
